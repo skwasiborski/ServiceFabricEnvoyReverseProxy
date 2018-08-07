@@ -1,0 +1,11 @@
+resources:
+- "@type": type.googleapis.com/envoy.api.v2.RouteConfiguration
+  name: local_route
+  virtual_hosts:
+  - name: local_service
+    domains: ["*"]
+    routes:
+    - match: { prefix: "/google" }
+      route: { host_rewrite: www.google.com, cluster: service_google }
+    - match: { prefix: "/local" }
+      route: { cluster: service_local }
