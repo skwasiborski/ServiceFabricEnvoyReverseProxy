@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -184,7 +183,7 @@ namespace Envoy.ControlPlane.Server.Cache
 
             if (request.ResourceNames.Count > 0)
             {
-                var requestedNames = request.ResourceNames.ToHashSet();
+                var requestedNames = new HashSet<string>(request.ResourceNames);
                 resourcesToSend = resources.Where(kv => requestedNames.Contains(kv.Key)).Select(kv => kv.Value);
             }
             else

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>7.2</LangVersion>
     <RootNamespace>Envoy.ControlPlane.Server</RootNamespace>
   </PropertyGroup>
@@ -18,6 +18,9 @@
     <RepositoryUrl>https://github.com/skwasiborski/csharp-control-plane</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.1" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Api\Api.csproj" />
   </ItemGroup>
