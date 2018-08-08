@@ -20,7 +20,7 @@
                                     AzureActiveDirectory="true"
                                     ServerCertThumbprint="0123456789012345678901234567890123456789" />
   -->
-  <ClusterConnectionParameters ConnectionEndpoint="skwa-envoy.westeurope.cloudapp.azure.com:19000" X509Credential="true" ServerCertThumbprint="DBF6106D1699C753AFF9DC528F30C1F9DDF26B1D" FindType="FindByThumbprint" FindValue="0d738ad923c9e47e07c6793fc5d72789a4e98c74" StoreLocation="CurrentUser" StoreName="My" />
+  <ClusterConnectionParameters ConnectionEndpoint="skwa-mesh.westeurope.cloudapp.azure.com:19000" X509Credential="true" ServerCertThumbprint="7A92033D3B6FB9DB129C6F6F89ED3C215870D14A" FindType="FindByThumbprint" FindValue="0d738ad923c9e47e07c6793fc5d72789a4e98c74" StoreLocation="CurrentUser" StoreName="My" />
   <ApplicationParameterFile Path="..\ApplicationParameters\Cloud.xml" />
   <CopyPackageParameters CompressPackage="true" />
   <UpgradeDeployment Mode="Monitored" Enabled="true">

@@ -14,7 +14,7 @@
   <CodePackage Name="Code" Version="1.3.0">
     <EntryPoint>
       <ExeHost>
-        <Program>ControlPlane.exe</Program>
+        <Program>ControlPlane</Program>
       </ExeHost>
     </EntryPoint>
   </CodePackage>

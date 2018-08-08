@@ -11,7 +11,7 @@
     <ServiceManifestRef ServiceManifestName="EnvoyPkg" ServiceManifestVersion="1.2.0" />
     <ConfigOverrides />
     <Policies>
-      <ContainerHostPolicies CodePackageRef="Code" Isolation="hyperv">
+      <ContainerHostPolicies CodePackageRef="Code">
         <PortBinding ContainerPort="29082" EndpointRef="IngressEndpoint" />
         <PortBinding ContainerPort="29083" EndpointRef="EgressEndpoint" />
       </ContainerHostPolicies>
