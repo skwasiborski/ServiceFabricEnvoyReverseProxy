@@ -45,12 +45,12 @@ namespace ControlPlane
             var envoyIngressClusters = ingrssEndpoints
                 .ToDictionary(kv => kv.Key, kv => kv.Value.Select(e => e.ToEnvoyIngressCluster()).ToDictionary(c => c.Name, c => (IMessage)c));
 
-            var envoyEgressRoute = egressEndpoints.Select(e => e.Key.ToEnvoyRoute(e.Key.EgressId)).ToRouteConfiguration("egress");
+            var envoyEgressRoute = egressEndpoints.SelectMany(e => e.Key.ToEnvoyRoute(e.Key.EgressId)).ToRouteConfiguration("egress");
 
             var envoyIngressRoutes = ingrssEndpoints
                 .ToDictionary(
                     kv => kv.Key,
-                    kv => kv.Value.Select(e => e.Type.ToEnvoyRoute(e.Type.IngressId)).ToRouteConfiguration("ingress"));
+                    kv => kv.Value.SelectMany(e => e.Type.ToEnvoyRoute(e.Type.IngressId, e.NetworkAddress.AbsolutePath)).ToRouteConfiguration("ingress"));
 
             var endpoints = new Resources(Guid.NewGuid().ToString(), envoyEgressClusterLoadAssignments);
 
@@ -164,48 +164,71 @@ namespace ControlPlane
             return assignment;
         }
 
-        public static Route ToEnvoyRoute(this EndpointType e, string clusterName)
+        public static Route[] ToEnvoyRoute(this EndpointType e, string clusterName, string prefixRewrite = null)
         {
-            var match = new RouteMatch()
-            {
-                Prefix = e.ServiceAbsolutePath +
-                         (e.ServiceAbsolutePath.EndsWith("/") ? string.Empty : "/"),
-            };
-
-            if (!e.DefaultEndpoint)
-            {
-                match.Headers.Add(new HeaderMatcher() { Name = "EndpointName", ExactMatch = e.EndpointName });
-            }
-
-            if (e.Role == ServiceEndpointRole.StatefulSecondary)
-            {
-                match.Headers.Add(new HeaderMatcher() { Name = "Replica", ExactMatch = "Secondary" });
-            }
+            var routes = new List<Route>(2);
+            var route = CreateEnvoyRoute(e, clusterName, prefixRewrite);
+            routes.Add(route);
 
             switch (e.PartitionKind)
             {
                 case ServicePartitionKind.Int64Range:
-                    match.Headers.Add(new HeaderMatcher()
+                    var highEnd = e.PartitionHigh.Value;
+                    // Envoy uses half open range semantics i.e. [start, end). If the end value is equal to Int64.MaxValue it is required to add additional raout to match the Int64.MaxValue case.
+                    if (e.PartitionHigh.Value == Int64.MaxValue)
+                    {
+                        var route2 = CreateEnvoyRoute(e, clusterName, prefixRewrite);
+                        route2.Match.Headers.Add(new HeaderMatcher() { Name = "PartitionKey", ExactMatch = Int64.MaxValue.ToString() });
+                        routes.Add(route2);
+                    }
+                    else
+                    {
+                        highEnd++;
+                    }
+
+                    route.Match.Headers.Add(new HeaderMatcher()
                     {
                         Name = "PartitionKey",
-                        RangeMatch = new Int64Range() { Start = e.PartitionLow.Value, End = e.PartitionHigh.Value }
+                        RangeMatch = new Int64Range() { Start = e.PartitionLow.Value, End = highEnd }
                     });
                     break;
                 case ServicePartitionKind.Named:
-                    match.Headers.Add(new HeaderMatcher() { Name = "PartitionKey", ExactMatch = e.PartitionKey });
+                    route.Match.Headers.Add(new HeaderMatcher() { Name = "PartitionKey", ExactMatch = e.PartitionKey });
                     break;
+            }
+
+            return routes.ToArray();
+        }
+
+        private static Route CreateEnvoyRoute(EndpointType e, string clusterName, string prefixRewrite)
+        {
+            var match = new RouteMatch()
+            {
+                Prefix = e.ServiceAbsolutePath.TrimEnd('/')
+            };
+
+            if (!e.DefaultEndpoint)
+            {
+                match.Headers.Add(new HeaderMatcher() {Name = "EndpointName", ExactMatch = e.EndpointName});
+            }
+
+            if (e.Role == ServiceEndpointRole.StatefulSecondary)
+            {
+                match.Headers.Add(new HeaderMatcher() {Name = "Replica", ExactMatch = "Secondary"});
+            }
+
+            var routeAction = new RouteAction {Cluster = clusterName};
+
+            if (prefixRewrite != null)
+            {
+                routeAction.PrefixRewrite = prefixRewrite == "/" ? prefixRewrite : prefixRewrite.TrimEnd('/');
             }
 
             return new Route
             {
-                Route_ = new RouteAction()
-                {
-                    Cluster = clusterName,
-                },
+                Route_ = routeAction,
                 Match = match
             };
-
-
         }
 
         public static RouteConfiguration ToRouteConfiguration(this IEnumerable<Route> routes, string name)

@@ -60,7 +60,7 @@ namespace ControlPlane
 
                 _server.Start();
 
-                return $"http://{_serverPort.Host}:{_serverPort.Port}";
+                return $"http://{_serviceContext.NodeContext.IPAddressOrFQDN}:{_serverPort.Port}";
             }
             catch (Exception)
             {
@@ -90,7 +90,7 @@ namespace ControlPlane
 
             var serviceEndpoint = _serviceContext.CodePackageActivationContext.GetEndpoint(endpointName);
             var port = serviceEndpoint.Port;
-            var host = "0.0.0.0"; // _serviceContext.NodeContext.IPAddressOrFQDN;
+            var host = "0.0.0.0";
 
             return new ServerPort(host, port, ServerCredentials.Insecure);
         }

@@ -1,7 +1,7 @@
 admin:
   access_log_path: /tmp/admin_access.log
   address:
-    socket_address: { address: 127.0.0.1, port_value: 9901 }
+    socket_address: { address: 0.0.0.0, port_value: 9901 }
 
 dynamic_resources:
   ads_config:
@@ -23,5 +23,5 @@ static_resources:
     http2_protocol_options: {}
     hosts:
     - socket_address:
-        address: host.docker.internal
+        address: controlplane.app
         port_value: 29084
