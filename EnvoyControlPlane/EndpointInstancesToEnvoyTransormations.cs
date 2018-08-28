@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Fabric;
@@ -14,7 +13,7 @@ using Envoy.Type;
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 
-namespace ControlPlane
+namespace EnvoyControlPlane
 {
     public static class EndpointInstancesToEnvoyTransormations
     {
@@ -23,7 +22,8 @@ namespace ControlPlane
 
         public static Dictionary<string, Snapshot> CreateEnvoySnapshots(
            Dictionary<string, string> nodeAdresses,
-           IEnumerable<EndpointInstance> endpointInstances)
+           IEnumerable<EndpointInstance> endpointInstances,
+           IEnumerable<SfRoute> sfRoutes)
         {
             var egressEndpoints = new Dictionary<EndpointType, List<EndpointInstance>>();
             var ingrssEndpoints = new Dictionary<string, List<EndpointInstance>>();
@@ -45,7 +45,31 @@ namespace ControlPlane
             var envoyIngressClusters = ingrssEndpoints
                 .ToDictionary(kv => kv.Key, kv => kv.Value.Select(e => e.ToEnvoyIngressCluster()).ToDictionary(c => c.Name, c => (IMessage)c));
 
-            var envoyEgressRoute = egressEndpoints.SelectMany(e => e.Key.ToEnvoyRoute(e.Key.EgressId)).ToRouteConfiguration("egress");
+            var endpointsDictionary = egressEndpoints.Keys.GroupBy(e => e.ServiceAbsolutePath).ToDictionary(g => g.Key, g => g.ToArray());
+
+            var processedSfRoutes = sfRoutes
+                .Select(r =>
+                {
+                    if (endpointsDictionary.TryGetValue(r.ServiceRoute.TrimEnd('/'), out var el))
+                    {
+                        return el.SelectMany(e => e.ToEnvoyRoute(e.EgressId).Select(o =>
+                        {
+                            var m = r.Match.Clone();
+                            m.Headers.AddRange(o.Match.Headers);
+                            o.Match = m;
+                            return o;
+                        }));
+                    }
+
+                    return null;
+                })
+                .Where(v => v != null)
+                .SelectMany(v => v);
+
+            var envoyEgressRoute = egressEndpoints
+                .SelectMany(e => e.Key.ToEnvoyRoute(e.Key.EgressId))
+                .Concat(processedSfRoutes)
+                .ToRouteConfiguration("egress");
 
             var envoyIngressRoutes = ingrssEndpoints
                 .ToDictionary(
@@ -240,5 +264,12 @@ namespace ControlPlane
             envoyEgressRoute.VirtualHosts.Add(vHost);
             return envoyEgressRoute;
         }
+    }
+
+    public class SfRoute
+    {
+        public RouteMatch Match { get; set; }
+        public string ServiceRoute { get; set; }
+        public bool EdgeRoute { get; set; }
     }
 }

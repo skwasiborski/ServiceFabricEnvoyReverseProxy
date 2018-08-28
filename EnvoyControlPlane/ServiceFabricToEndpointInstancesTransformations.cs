@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Grpc.Core.Logging;
 using Newtonsoft.Json.Linq;
 
-namespace ControlPlane
+namespace EnvoyControlPlane
 {
     internal static class ServiceFabricToEndpointInstancesTransformations
     {

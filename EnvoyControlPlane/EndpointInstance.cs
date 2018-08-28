@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ControlPlane
+namespace EnvoyControlPlane
 {
     public class EndpointInstance
     {

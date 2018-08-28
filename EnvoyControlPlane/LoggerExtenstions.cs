@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Grpc.Core.Logging;
 
-namespace ControlPlane
+namespace EnvoyControlPlane
 {
     public static class LoggerExtenstions
     {

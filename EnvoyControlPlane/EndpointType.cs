@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Fabric;
 
-namespace ControlPlane
+namespace EnvoyControlPlane
 {
     public class EndpointType
     {

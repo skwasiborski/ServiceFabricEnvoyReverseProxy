@@ -6,24 +6,15 @@ using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.ServiceFabric.Services.Communication.Runtime;
 
-namespace ControlPlane
+namespace EnvoyControlPlane
 {
     public class GrpcCommunicationListener : ICommunicationListener
     {
-        private const string ServiceEndpointName = "ServiceEndpoint";
-
         private readonly IEnumerable<Func<CancellationToken, ServerServiceDefinition>> _services;
         private readonly ServiceContext _serviceContext;
         private readonly ServerPort _serverPort;
 
         private Server _server;
-
-        public GrpcCommunicationListener(
-          IEnumerable<Func<CancellationToken, ServerServiceDefinition>> services,
-          ServiceContext serviceContext)
-            : this(services, serviceContext, ServiceEndpointName)
-        {
-        }
 
         public GrpcCommunicationListener(
             IEnumerable<Func<CancellationToken, ServerServiceDefinition>> services,
@@ -60,7 +51,7 @@ namespace ControlPlane
 
                 _server.Start();
 
-                return $"http://{_serviceContext.NodeContext.IPAddressOrFQDN}:{_serverPort.Port}";
+                return $"http://{_serverPort.Host}:{_serverPort.Port}";
             }
             catch (Exception)
             {
@@ -90,7 +81,7 @@ namespace ControlPlane
 
             var serviceEndpoint = _serviceContext.CodePackageActivationContext.GetEndpoint(endpointName);
             var port = serviceEndpoint.Port;
-            var host = "0.0.0.0";
+            var host = serviceEndpoint.IpAddressOrFqdn;
 
             return new ServerPort(host, port, ServerCredentials.Insecure);
         }

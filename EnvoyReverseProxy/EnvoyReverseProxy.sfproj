@@ -34,7 +34,7 @@
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ControlPlane\ControlPlane.csproj" />
+    <ProjectReference Include="..\EnvoyControlPlane\EnvoyControlPlane.csproj" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
   <PropertyGroup>
